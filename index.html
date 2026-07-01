@@ -168,6 +168,890 @@
   .swipe-hint{display:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--chalk-dim);text-align:center;margin-bottom:8px;letter-spacing:0.06em;}
   @media (max-width:720px){ .swipe-hint{display:block;} }
   .bracket{display:flex;gap:34px;min-width:1100px;padding:6px 2px;}
+  .bracket-col{display:flex;flex-direction:column;justify-content:flex-start;flex:1;min-width:150px;position:relative;}
+  @media (max-width:520px){ .bracket-col{min-width:170px;} .bracket{min-width:1250px;} }
+  .bracket-col-label{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--gold);
+    text-transform:uppercase;text-align:center;margin-bottom:10px;
+  }
+  .match{
+    background:var(--pitch);border:1px solid var(--line);border-radius:5px;
+    margin:8px 0;cursor:default;overflow:hidden;
+  }
+  .match.clickable{cursor:pointer;}
+  .match.clickable:hover{border-color:var(--gold);}
+  .slot{
+    display:flex;justify-content:space-between;align-items:center;gap:6px;
+    padding:12px 14px;font-size:15px;border-bottom:1px solid var(--line);
+    min-height:20px;
+  }
+  .slot:last-child{border-bottom:none;}
+  .slot.winner{background:rgba(212,160,23,0.16);color:var(--gold-bright);font-weight:600;}
+  .slot.loser{opacity:0.4;text-decoration:line-through;}
+  .slot.tbd{color:var(--chalk-dim);font-style:italic;}
+  .slot-team{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .slot-owner{font-size:12px;color:var(--chalk-dim);flex-shrink:0;}
+  .match-meta{
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+    padding:4px 8px;border-top:1px solid var(--line);
+  }
+  .match-when{
+    font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.02em;
+    color:var(--chalk-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .espn-link{
+    font-family:'Space Mono',monospace;
+    font-size:9px;letter-spacing:0.03em;color:var(--gold);
+    text-decoration:none;flex-shrink:0;
+  }
+  .espn-link:hover{color:var(--gold-bright);}
+  .slot.winner .slot-owner{color:var(--gold-bright);}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(6,15,10,0.75);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:16px;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--pitch);border:1px solid var(--line);border-radius:8px;
+    padding:24px;max-width:440px;width:100%;
+    max-height:86vh;overflow-y:auto;
+  }
+  .modal h2{font-family:'Oswald',sans-serif;text-transform:uppercase;margin:0 0 14px;font-size:20px;}
+  .modal input[type=text],.modal input[type=password],.modal input[type=number]{
+    background:var(--pitch-dark);border:1px solid var(--line);color:var(--chalk);
+    border-radius:4px;padding:10px 10px;font-family:'Inter',sans-serif;font-size:16px;width:100%;
+  }
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+    padding:11px 16px;border-radius:4px;border:1px solid var(--line);
+    background:var(--turf);color:var(--chalk);cursor:pointer;
+    min-height:44px;
+  }
+  .btn.primary{background:var(--gold);color:var(--pitch-dark);border-color:var(--gold);}
+  .btn.danger{background:var(--scarlet);color:var(--chalk);border-color:var(--scarlet);}
+  .btn:hover{opacity:0.88;}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .err{color:#e88;font-size:12px;margin-top:8px;min-height:14px;}
+
+  .stat-edit-row{
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+    padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;
+  }
+  .stat-edit-row:last-child{border-bottom:none;}
+  .stat-edit-name{width:120px;flex-shrink:0;font-weight:600;}
+  .stat-input{width:52px !important;}
+  .stat-field label{display:block;font-size:9px;color:var(--chalk-dim);margin-bottom:2px;}
+
+  .adj-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:14px;}
+  .adj-row span{flex:1;}
+  .adj-row input{width:64px !important;}
+
+  .save-bar{
+    position:sticky;bottom:0;background:var(--pitch);border-top:1px solid var(--line);
+    padding:12px 0;margin-top:10px;display:flex;justify-content:flex-end;gap:10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="lock-btn" id="lockBtn" title="Admin">🔒</div>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Friends &amp; Family Invitational</div>
+    <h1>The Pool</h1>
+    <div class="sub">FIFA World Cup 2026 · Winner takes $160</div>
+  </header>
+
+  <div class="scoreboard-strip" id="scoreboardStrip"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-view="standingsView">Standings</button>
+    <button class="tab-btn" data-view="bracketView">Bracket</button>
+  </div>
+
+  <div id="standingsView" class="view active">
+    <div class="section-title">Standings</div>
+    <div class="card" id="leaderboard"></div>
+  </div>
+
+  <div id="bracketView" class="view">
+    <div class="section-title">Round of 32 → Final</div>
+    <div class="swipe-hint">← swipe to see the full bracket →</div>
+    <div class="bracket-scroll">
+      <div class="bracket" id="bracketEl"></div>
+    </div>
+  </div>
+
+  <div class="note" id="footnote"></div>
+</div>
+
+<!-- Passcode entry modal -->
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <h2 id="authTitle">Admin Access</h2>
+    <div id="authBody"></div>
+  </div>
+</div>
+
+<!-- Match winner modal -->
+<div class="overlay" id="matchOverlay">
+  <div class="modal">
+    <h2>Who won?</h2>
+    <div id="matchBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="matchCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stats / adjustments modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal" style="max-width:640px;">
+    <h2>Goals &amp; Adjustments</h2>
+    <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:10px;">
+      Round wins are set from the Bracket tab now. Use this panel for goal tallies (tiebreakers) and manual point corrections.
+    </div>
+    <div class="section-title">Team Goal Tallies</div>
+    <div id="statEditList"></div>
+
+    <div class="section-title">Manual Point Adjustments</div>
+    <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:8px;">Added straight to a participant's total — use if the automatic math needs a correction.</div>
+    <div id="adjList"></div>
+
+    <div class="save-bar">
+      <button class="btn" id="stopEditBtn">Stop Editing</button>
+      <button class="btn" id="closeEditBtn">Close</button>
+      <button class="btn primary" id="saveEditBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCr32yTAJ5-62ZwpCaH6bGqfpiXock8BCE",
+  authDomain: "the-pool-c42b3.firebaseapp.com",
+  projectId: "the-pool-c42b3",
+  storageBucket: "the-pool-c42b3.firebasestorage.app",
+  messagingSenderId: "355788321550",
+  appId: "1:355788321550:web:2ff11e5628d7dbc7e91d5f"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const poolDocRef = doc(db, "poolTracker", "state");
+const ROUND_POINTS = { R32:1, R16:1, QF:1, SF:2, F:4 };
+const ROUND_LABELS = { R32:"Round of 32", R16:"Round of 16", QF:"Quarterfinal", SF:"Semifinal", F:"Final" };
+const ROUND_ORDER = ["R32","R16","QF","SF","F"];
+const TOTAL_PRIZE = 160;
+
+const DEFAULT_TEAMS = {
+  "Spain":            { wins:2, gf:0, ga:0 },
+  "South Africa":     { wins:1, gf:0, ga:0 },
+  "DR Congo":         { wins:1, gf:0, ga:0 },
+  "Australia":        { wins:1, gf:0, ga:0 },
+  "Switzerland":      { wins:2, gf:0, ga:0 },
+  "Austria":          { wins:1, gf:0, ga:0 },
+  "Colombia":         { wins:2, gf:0, ga:0 },
+  "Sweden":           { wins:1, gf:0, ga:0 },
+  "Germany":          { wins:2, gf:0, ga:0 },
+  "Japan":            { wins:1, gf:0, ga:0 },
+  "Bosnia & H":       { wins:1, gf:0, ga:0 },
+  "Croatia":          { wins:2, gf:0, ga:0 },
+  "Mexico":           { wins:3, gf:0, ga:0 },
+  "Egypt":            { wins:1, gf:0, ga:0 },
+  "Senegal":          { wins:1, gf:0, ga:0 },
+  "France":           { wins:3, gf:0, ga:0 },
+  "England":          { wins:2, gf:0, ga:0 },
+  "Canada":           { wins:1, gf:0, ga:0 },
+  "Ecuador":          { wins:1, gf:0, ga:0 },
+  "Brazil":           { wins:2, gf:0, ga:0 },
+  "Belgium":          { wins:1, gf:0, ga:0 },
+  "Morocco":          { wins:2, gf:0, ga:0 },
+  "Ghana":            { wins:1, gf:0, ga:0 },
+  "Portugal":         { wins:1, gf:0, ga:0 },
+  "Netherlands":      { wins:2, gf:0, ga:0 },
+  "Cape Verde":       { wins:0, gf:0, ga:0 },
+  "Paraguay":         { wins:1, gf:0, ga:0 },
+  "Norway":           { wins:2, gf:0, ga:0 },
+  "Argentina":        { wins:3, gf:0, ga:0 },
+  "Ivory Coast":      { wins:2, gf:0, ga:0 },
+  "Algeria":          { wins:1, gf:0, ga:0 },
+  "USA":              { wins:2, gf:0, ga:0 }
+};
+
+const DEFAULT_PARTICIPANTS = [
+  { name:"Jess/Philipe", teams:["Spain","South Africa","DR Congo","Australia"], double:"South Africa" },
+  { name:"Val",          teams:["Switzerland","Austria","Colombia","Sweden"],    double:"Sweden" },
+  { name:"Peter",        teams:["Germany","Japan","Bosnia & H","Croatia"],       double:"Bosnia & H" },
+  { name:"Mariella",     teams:["Mexico","Egypt","Senegal","France"],            double:"Egypt" },
+  { name:"George",       teams:["England","Canada","Ecuador","Brazil"],          double:"Canada" },
+  { name:"Kat",          teams:["Belgium","Morocco","Ghana","Portugal"],         double:"Ghana" },
+  { name:"Anna",         teams:["Netherlands","Cape Verde","Paraguay","Norway"], double:"Cape Verde" },
+  { name:"Jay",          teams:["Argentina","Ivory Coast","Algeria","USA"],      double:"Ivory Coast" }
+];
+
+// Official Round of 32 draw + bracket path to the Final.
+// Confirmed decisive results as of the last sync are pre-filled below.
+function freshBracket(){
+  return {
+    m1:  { round:"R32", slotA:{team:"South Africa"}, slotB:{team:"Canada"},     winner:"Canada", espn:"760486", when:"Sun, Jun 28 · 3:00 PM ET" },
+    m2:  { round:"R32", slotA:{team:"Netherlands"},  slotB:{team:"Morocco"},    winner:null, espn:"760488", when:"Mon, Jun 29 · 9:00 PM ET" },
+    m3:  { round:"R32", slotA:{team:"Germany"},      slotB:{team:"Paraguay"},   winner:null, espn:"760489", when:"Mon, Jun 29 · 4:30 PM ET" },
+    m4:  { round:"R32", slotA:{team:"France"},       slotB:{team:"Sweden"},     winner:"France", espn:"760492", when:"Tue, Jun 30 · 5:00 PM ET" },
+    m5:  { round:"R32", slotA:{team:"Brazil"},       slotB:{team:"Japan"},      winner:"Brazil", espn:"760487", when:"Mon, Jun 29 · 1:00 PM ET" },
+    m6:  { round:"R32", slotA:{team:"Ivory Coast"},  slotB:{team:"Norway"},     winner:"Norway", espn:"760490", when:"Tue, Jun 30 · 1:00 PM ET" },
+    m7:  { round:"R32", slotA:{team:"Mexico"},       slotB:{team:"Ecuador"},    winner:null, espn:"760491", when:"Tue, Jun 30 · 9:00 PM ET" },
+    m8:  { round:"R32", slotA:{team:"England"},      slotB:{team:"DR Congo"},  winner:null, espn:"760495", when:"Wed, Jul 1 · 12:00 PM ET" },
+    m9:  { round:"R32", slotA:{team:"Spain"},        slotB:{team:"Austria"},    winner:null, espn:"760497", when:"Thu, Jul 2 · 3:00 PM ET" },
+    m10: { round:"R32", slotA:{team:"Portugal"},     slotB:{team:"Croatia"},    winner:null, espn:"760496", when:"Thu, Jul 2 · 7:00 PM ET" },
+    m11: { round:"R32", slotA:{team:"Belgium"},      slotB:{team:"Senegal"},    winner:null, espn:"760493", when:"Wed, Jul 1 · 4:00 PM ET" },
+    m12: { round:"R32", slotA:{team:"USA"},          slotB:{team:"Bosnia & H"}, winner:null, espn:"760494", when:"Wed, Jul 1 · 8:00 PM ET" },
+    m13: { round:"R32", slotA:{team:"Australia"},    slotB:{team:"Egypt"},      winner:null, espn:"760499", when:"Fri, Jul 3 · 2:00 PM ET" },
+    m14: { round:"R32", slotA:{team:"Argentina"},    slotB:{team:"Cape Verde"}, winner:null, espn:"760500", when:"Fri, Jul 3 · 6:00 PM ET" },
+    m15: { round:"R32", slotA:{team:"Switzerland"},  slotB:{team:"Algeria"},    winner:null, espn:"760498", when:"Thu, Jul 2 · 11:00 PM ET" },
+    m16: { round:"R32", slotA:{team:"Colombia"},     slotB:{team:"Ghana"},      winner:null, espn:"760501", when:"Fri, Jul 3 · 9:30 PM ET" },
+
+    rA: { round:"R16", slotA:{feeder:"m1"},  slotB:{feeder:"m2"},  winner:null, espn:"760502", when:"Sat, Jul 4 · 1:00 PM ET" },
+    rB: { round:"R16", slotA:{feeder:"m3"},  slotB:{feeder:"m4"},  winner:null, espn:"760503", when:"Sat, Jul 4 · 5:00 PM ET" },
+    rC: { round:"R16", slotA:{feeder:"m5"},  slotB:{feeder:"m6"},  winner:null, espn:"760504", when:"Sun, Jul 5 · 4:00 PM ET" },
+    rD: { round:"R16", slotA:{feeder:"m7"},  slotB:{feeder:"m8"},  winner:null, espn:"760505", when:"Sun, Jul 5 · 8:00 PM ET" },
+    rE: { round:"R16", slotA:{feeder:"m9"},  slotB:{feeder:"m10"}, winner:null, espn:"760506", when:"Mon, Jul 6 · 3:00 PM ET" },
+    rF: { round:"R16", slotA:{feeder:"m11"}, slotB:{feeder:"m12"}, winner:null, espn:"760507", when:"Mon, Jul 6 · 8:00 PM ET" },
+    rG: { round:"R16", slotA:{feeder:"m13"}, slotB:{feeder:"m14"}, winner:null, espn:"760509", when:"Tue, Jul 7 · 12:00 PM ET" },
+    rH: { round:"R16", slotA:{feeder:"m15"}, slotB:{feeder:"m16"}, winner:null, espn:"760508", when:"Tue, Jul 7 · 4:00 PM ET" },
+
+    q1: { round:"QF", slotA:{feeder:"rA"}, slotB:{feeder:"rB"}, winner:null, espn:"760510", when:"Thu, Jul 9 · 4:00 PM ET" },
+    q2: { round:"QF", slotA:{feeder:"rC"}, slotB:{feeder:"rD"}, winner:null, espn:"760512", when:"Sat, Jul 11 · 5:00 PM ET" },
+    q3: { round:"QF", slotA:{feeder:"rE"}, slotB:{feeder:"rF"}, winner:null, espn:"760511", when:"Fri, Jul 10 · 3:00 PM ET" },
+    q4: { round:"QF", slotA:{feeder:"rG"}, slotB:{feeder:"rH"}, winner:null, espn:"760513", when:"Sat, Jul 11 · 9:00 PM ET" },
+
+    // FIFA's real pairing crosses: Match101 = winner(Match97=q1) v winner(Match98=q3);
+    // Match102 = winner(Match99=q2) v winner(Match100=q4). NOT adjacent q1+q2/q3+q4 — that was a bug.
+    s1: { round:"SF", slotA:{feeder:"q1"}, slotB:{feeder:"q3"}, winner:null, espn:"760514", when:"Tue, Jul 14 · 3:00 PM ET" },
+    s2: { round:"SF", slotA:{feeder:"q2"}, slotB:{feeder:"q4"}, winner:null, espn:"760515", when:"Wed, Jul 15 · 3:00 PM ET" },
+
+    f:  { round:"F", slotA:{feeder:"s1"}, slotB:{feeder:"s2"}, winner:null, espn:"760517", when:"Sun, Jul 19 · 3:00 PM ET" }
+  };
+}
+
+function backfillEspnIds(bracket){
+  const fresh = freshBracket();
+  Object.keys(fresh).forEach(id=>{
+    if(!bracket[id]) return;
+    if(!bracket[id].espn){ bracket[id].espn = fresh[id].espn; }
+    if(!bracket[id].when){ bracket[id].when = fresh[id].when; }
+  });
+  // Correct a bracket-logic bug from an earlier version: the Semifinal pairing was
+  // wired as adjacent QFs (q1+q2 / q3+q4) instead of FIFA's actual crossed pairing
+  // (q1+q3 / q2+q4). Safe to overwrite outright since no SF winner should exist yet
+  // at this stage of the tournament.
+  if(bracket.s1 && bracket.s1.slotB && bracket.s1.slotB.feeder === "q2"){
+    bracket.s1.slotB.feeder = "q3";
+    bracket.s2.slotA.feeder = "q2";
+  }
+}
+
+const BRACKET_COLUMNS = [
+  { round:"R32", ids:["m1","m2","m3","m4","m5","m6","m7","m8","m9","m10","m11","m12","m13","m14","m15","m16"] },
+  { round:"R16", ids:["rA","rB","rC","rD","rE","rF","rG","rH"] },
+  { round:"QF",  ids:["q1","q2","q3","q4"] },
+  { round:"SF",  ids:["s1","s2"] },
+  { round:"F",   ids:["f"] }
+];
+
+function defaultData(){
+  return {
+    teams: JSON.parse(JSON.stringify(DEFAULT_TEAMS)),
+    participants: JSON.parse(JSON.stringify(DEFAULT_PARTICIPANTS)),
+    bracket: freshBracket(),
+    adjustments: {},
+    updatedAt: null
+  };
+}
+
+let data = null;
+let unlocked = false;
+let currentMatchId = null;
+let loadFailedWarning = false;
+
+async function loadData(){
+  try{
+    const snap = await getDoc(poolDocRef);
+    if(snap.exists()){
+      data = snap.data();
+      if(!data.bracket){ data.bracket = freshBracket(); } else { backfillEspnIds(data.bracket); } // migrate older saves
+      reconcileBracket();
+    } else {
+      // Firestore explicitly tells us the document doesn't exist yet — safe to seed it.
+      data = defaultData();
+      reconcileBracket();
+      try{ await persist(); }catch(e2){ console.error("Could not save seed data:", e2); }
+    }
+  }catch(e){
+    // A failed read is NOT the same thing as "no data exists yet" — it can also mean
+    // a transient connection hiccup. Show a working fallback view for this session,
+    // but do NOT write it back: that would permanently overwrite real saved data if
+    // the failure was only temporary.
+    console.warn("Could not read pool data this time (showing a temporary local view):", e);
+    data = defaultData();
+    reconcileBracket();
+    loadFailedWarning = true;
+  }
+  try{
+    render();
+  }catch(e3){
+    console.error("Render failed:", e3);
+    document.getElementById("footnote").innerHTML =
+      "Something went wrong loading the pool data. Try refreshing — if it keeps happening, let me know.";
+  }
+
+  // Live sync: when anyone (including this tab) saves a change, every open tab
+  // re-renders automatically — no refresh needed to see updated scores.
+  onSnapshot(poolDocRef, (snap)=>{
+    if(!snap.exists()) return;
+    data = snap.data();
+    if(!data.bracket){ data.bracket = freshBracket(); } else { backfillEspnIds(data.bracket); }
+    reconcileBracket();
+    loadFailedWarning = false;
+    render();
+  }, (err)=>{
+    console.warn("Live sync listener error:", err);
+  });
+}
+
+async function persist(){
+  data.updatedAt = new Date().toISOString();
+  await setDoc(poolDocRef, data);
+}
+
+async function trySave(){
+  try{ await persist(); return true; }
+  catch(e){ console.error("Save to storage failed:", e); return false; }
+}
+
+function showSaveWarning(){
+  const f = document.getElementById("footnote");
+  f.innerHTML = "<b>Heads up:</b> your last change couldn't be saved to shared storage (connection hiccup). " +
+    "It's showing correctly for you right now, but reloading — or someone else opening this link — may not see it yet. Try again in a moment." +
+    "<br><br>" + f.innerHTML;
+}
+
+// ---- Bracket resolution helpers ----
+function slotTeam(matchId, slot){
+  const m = data.bracket[matchId];
+  const s = slot === "A" ? m.slotA : m.slotB;
+  if(s.team) return s.team;
+  if(s.feeder) return data.bracket[s.feeder].winner || null;
+  return null;
+}
+
+// Clears any match's recorded winner if it no longer matches either resolved slot
+// (cascades forward since we process rounds in bracket order), then rebuilds each
+// team's round-win flags purely from bracket winners — bracket is the single source of truth.
+function reconcileBracket(){
+  BRACKET_COLUMNS.forEach(col=>{
+    col.ids.forEach(id=>{
+      const m = data.bracket[id];
+      const a = slotTeam(id,"A"), b = slotTeam(id,"B");
+      if(m.winner && m.winner!==a && m.winner!==b){ m.winner = null; }
+    });
+  });
+  Object.values(data.teams).forEach(t=>{ t.rounds = {}; });
+  BRACKET_COLUMNS.forEach(col=>{
+    col.ids.forEach(id=>{
+      const m = data.bracket[id];
+      if(m.winner && data.teams[m.winner]){
+        data.teams[m.winner].rounds[m.round] = true;
+      }
+    });
+  });
+}
+
+function computeStats(p){
+  let pts=0, gd=0, gs=0, wins=0;
+  p.teams.forEach(tk=>{
+    const t = data.teams[tk];
+    if(!t) return;
+    let roundPts = 0;
+    ROUND_ORDER.forEach(r=>{ if(t.rounds && t.rounds[r]) roundPts += ROUND_POINTS[r]; });
+    if(tk === p.double) roundPts *= 2;
+    pts += roundPts;
+    gd += (t.gf - t.ga);
+    gs += t.gf;
+    wins += t.wins;
+  });
+  pts += (data.adjustments[p.name] || 0);
+  return {pts, gd, gs, wins};
+}
+
+function rankParticipants(){
+  const list = data.participants.map(p=>({p, s:computeStats(p)}));
+  list.sort((a,b)=>{
+    if(b.s.pts !== a.s.pts) return b.s.pts - a.s.pts;
+    if(b.s.gd !== a.s.gd) return b.s.gd - a.s.gd;
+    if(b.s.gs !== a.s.gs) return b.s.gs - a.s.gs;
+    return b.s.wins - a.s.wins;
+  });
+  return list;
+}
+
+function fmtSigned(n){ return (n>0? "+":"") + n; }
+
+function ownerOf(teamName){
+  const p = data.participants.find(pp => pp.teams.includes(teamName));
+  if(!p) return null;
+  return { name:p.name, isDouble: p.double === teamName };
+}
+
+// ---------- Render ----------
+function render(){
+  const ranked = rankParticipants();
+  const top = ranked[0].s;
+  const winners = ranked.filter(r =>
+    r.s.pts===top.pts && r.s.gd===top.gd && r.s.gs===top.gs && r.s.wins===top.wins
+  );
+  const share = (TOTAL_PRIZE / winners.length);
+
+  document.getElementById("scoreboardStrip").innerHTML = `
+    <div class="strip-cell"><div class="strip-num">${ranked.length}</div><div class="strip-label">Players</div></div>
+    <div class="strip-cell"><div class="strip-num">$${TOTAL_PRIZE}</div><div class="strip-label">Prize Pool</div></div>
+    <div class="strip-cell"><div class="strip-num">${top.pts}</div><div class="strip-label">Lead Pts</div></div>
+  `;
+
+  const board = document.getElementById("leaderboard");
+  board.innerHTML = ranked.map((r,i)=>{
+    const isWinner = winners.includes(r);
+    const teamsStr = r.p.teams.map(tk => tk===r.p.double ? `<span class="double-tag">${tk} ★2x</span>` : tk).join(" · ");
+    return `
+      <div class="row ${isWinner?'leader':''}">
+        <div class="rank">${i+1}</div>
+        <div class="who">
+          <div class="who-name">${r.p.name}${isWinner? ' <span style="color:var(--gold-bright);font-size:12px;">— $'+share.toFixed(share%1?2:0)+'</span>':''}</div>
+          <div class="who-teams">${teamsStr}</div>
+          <div class="tiebreak">GD ${fmtSigned(r.s.gd)} · GS ${r.s.gs} · W ${r.s.wins}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="pts">${r.s.pts}</div>
+          <div class="pts-label">pts</div>
+        </div>
+      </div>`;
+  }).join("");
+
+  renderBracket();
+
+  document.getElementById("footnote").innerHTML = `
+    ${loadFailedWarning ? '<b>Heads up:</b> couldn\'t load the saved data just now (connection hiccup) — this is a temporary fallback view, nothing saved has been overwritten. Refresh in a moment to get the real data back.<br><br>' : ''}
+    <b>How it's scored:</b> R32/R16/QF win = 1 pt, SF win = 2 pts, Final win = 4 pts — doubled for each player's designated long-shot team (★2x). Ties broken by combined goal difference, then goals scored, then wins in normal time; a full tie splits the pot.<br><br>
+    <b>Data note:</b> match winners are set in the Bracket tab as results are officially confirmed — including any penalty shootouts, which aren't auto-detected. Goal tallies for tiebreakers are entered by the admin in Goals &amp; Adjustments.<br><br>
+    Last updated: ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : "just now"}
+  `;
+}
+
+function renderBracket(){
+  const el = document.getElementById("bracketEl");
+  el.innerHTML = BRACKET_COLUMNS.map(col=>{
+    const matches = col.ids.map(id=>{
+      const m = data.bracket[id];
+      const teamA = slotTeam(id,"A");
+      const teamB = slotTeam(id,"B");
+      const rowHtml = (teamName)=>{
+        if(!teamName){
+          return `<div class="slot tbd"><span class="slot-team">TBD</span></div>`;
+        }
+        const own = ownerOf(teamName);
+        const cls = m.winner ? (m.winner===teamName ? "winner":"loser") : "";
+        const ownerLabel = own ? (own.isDouble ? own.name+" ★2x" : own.name) : "";
+        return `<div class="slot ${cls}"><span class="slot-team">${teamName}</span><span class="slot-owner">${ownerLabel}</span></div>`;
+      };
+      const clickable = unlocked && teamA && teamB;
+      const espnLink = (teamA && teamB && m.espn)
+        ? `<div class="match-meta">
+             <span class="match-when">${m.when||""}</span>
+             <a class="espn-link" href="https://www.espn.com/soccer/match/_/gameId/${m.espn}" target="_blank" rel="noopener" onclick="event.stopPropagation()">ESPN ↗</a>
+           </div>`
+        : "";
+      return `<div class="match ${clickable?'clickable':''}" data-match="${id}">
+        ${rowHtml(teamA)}
+        ${rowHtml(teamB)}
+        ${espnLink}
+      </div>`;
+    }).join("");
+    return `<div class="bracket-col">
+      <div class="bracket-col-label">${ROUND_LABELS[col.round]}</div>
+      ${matches}
+    </div>`;
+  }).join("");
+
+  if(unlocked){
+    el.querySelectorAll(".match.clickable").forEach(box=>{
+      box.addEventListener("click", ()=> openMatchModal(box.dataset.match));
+    });
+  }
+
+  layoutBracket();
+}
+
+// Positions every match after the first round at the vertical midpoint of the two
+// matches that feed into it, rather than just spacing each column evenly.
+// Only works while the Bracket tab is actually visible (hidden elements measure as 0).
+function layoutBracket(){
+  const bracketView = document.getElementById("bracketView");
+  if(!bracketView.classList.contains("active")) return;
+
+  const cols = document.querySelectorAll(".bracket-col");
+  if(!cols.length) return;
+
+  const positions = {};
+  BRACKET_COLUMNS[0].ids.forEach(id=>{
+    const elm = cols[0].querySelector(`[data-match="${id}"]`);
+    if(!elm) return;
+    elm.style.position = "";
+    elm.style.top = "";
+    positions[id] = { top: elm.offsetTop, height: elm.offsetHeight };
+  });
+
+  for(let c=1; c<BRACKET_COLUMNS.length; c++){
+    const colEl = cols[c];
+    let minTop = Infinity;
+    BRACKET_COLUMNS[c].ids.forEach(id=>{
+      const m = data.bracket[id];
+      const pa = positions[m.slotA.feeder];
+      const pb = positions[m.slotB.feeder];
+      if(!pa || !pb) return;
+      const centerA = pa.top + pa.height/2;
+      const centerB = pb.top + pb.height/2;
+      const center = (centerA + centerB) / 2;
+      const elm = colEl.querySelector(`[data-match="${id}"]`);
+      if(!elm) return;
+      const h = elm.offsetHeight;
+      const top = center - h/2;
+      elm.style.position = "absolute";
+      elm.style.top = top + "px";
+      elm.style.left = "0";
+      elm.style.right = "0";
+      elm.style.margin = "0";
+      positions[id] = { top, height: h };
+      if(top < minTop) minTop = top;
+    });
+
+    const label = colEl.querySelector(".bracket-col-label");
+    if(label && isFinite(minTop)){
+      label.style.position = "absolute";
+      label.style.top = (minTop - label.offsetHeight - 10) + "px";
+      label.style.left = "0";
+      label.style.right = "0";
+      label.style.margin = "0";
+    }
+  }
+}
+
+window.addEventListener("resize", ()=>{
+  clearTimeout(window._bracketResizeT);
+  window._bracketResizeT = setTimeout(layoutBracket, 150);
+});
+
+// ---------- Tabs ----------
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.view).classList.add("active");
+    if(btn.dataset.view === "bracketView") layoutBracket();
+  });
+});
+
+// ---------- Admin / auth ----------
+const lockBtn = document.getElementById("lockBtn");
+const authOverlay = document.getElementById("authOverlay");
+const authTitle = document.getElementById("authTitle");
+const authBody = document.getElementById("authBody");
+
+lockBtn.addEventListener("click", ()=>{
+  if(unlocked){ openEditModal(); return; }
+  openConfirmModal();
+});
+
+function openConfirmModal(){
+  authTitle.textContent = "Enable editing?";
+  authBody.innerHTML = `
+    <div style="font-size:13px;color:var(--chalk-dim);margin-bottom:16px;line-height:1.5;">
+      This lets you set match winners in the bracket and adjust goals/points. Anyone with this link can enable it — it's just here to stop accidental taps, not to lock anyone out.
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="confirmCancel">Cancel</button>
+      <button class="btn primary" id="confirmGo">Enable Editing</button>
+    </div>`;
+  authOverlay.classList.add("show");
+  document.getElementById("confirmCancel").onclick = ()=>authOverlay.classList.remove("show");
+  document.getElementById("confirmGo").onclick = ()=>{
+    unlocked = true;
+    lockBtn.classList.add("unlocked"); lockBtn.textContent="🔓";
+    authOverlay.classList.remove("show");
+    render();
+    openEditModal();
+  };
+}
+
+// ---------- Match winner modal ----------
+const matchOverlay = document.getElementById("matchOverlay");
+const matchBody = document.getElementById("matchBody");
+document.getElementById("matchCloseBtn").onclick = ()=> matchOverlay.classList.remove("show");
+
+function openMatchModal(matchId){
+  currentMatchId = matchId;
+  const m = data.bracket[matchId];
+  const teamA = slotTeam(matchId,"A");
+  const teamB = slotTeam(matchId,"B");
+  matchBody.innerHTML = `
+    <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:14px;">${ROUND_LABELS[m.round]}</div>
+    <div class="modal-actions" style="margin-top:0;flex-direction:column;">
+      <button class="btn primary" id="pickA" style="width:100%;text-align:left;">${teamA}${m.winner===teamA?' ✓':''}</button>
+      <button class="btn primary" id="pickB" style="width:100%;text-align:left;">${teamB}${m.winner===teamB?' ✓':''}</button>
+      ${m.winner ? '<button class="btn danger" id="pickClear" style="width:100%;">Clear result</button>' : ''}
+    </div>
+  `;
+  document.getElementById("pickA").onclick = ()=> setMatchWinner(matchId, teamA);
+  document.getElementById("pickB").onclick = ()=> setMatchWinner(matchId, teamB);
+  const clearBtn = document.getElementById("pickClear");
+  if(clearBtn) clearBtn.onclick = ()=> setMatchWinner(matchId, null);
+  matchOverlay.classList.add("show");
+}
+
+async function setMatchWinner(matchId, teamName){
+  data.bracket[matchId].winner = teamName;
+  reconcileBracket();
+  const ok = await trySave();
+  matchOverlay.classList.remove("show");
+  render();
+  if(!ok) showSaveWarning();
+}
+
+// ---------- Goals & Adjustments modal ----------
+const editOverlay = document.getElementById("editOverlay");
+document.getElementById("closeEditBtn").onclick = ()=> editOverlay.classList.remove("show");
+document.getElementById("stopEditBtn").onclick = ()=>{
+  unlocked = false;
+  lockBtn.classList.remove("unlocked"); lockBtn.textContent="🔒";
+  editOverlay.classList.remove("show");
+  render();
+};
+
+function openEditModal(){
+  const teamNames = Object.keys(data.teams).sort();
+  document.getElementById("statEditList").innerHTML = teamNames.map(name=>{
+    const t = data.teams[name];
+    return `
+      <div class="stat-edit-row">
+        <div class="stat-edit-name">${name}</div>
+        <div class="stat-field"><label>GF</label><input type="number" class="stat-input" data-team="${name}" data-field="gf" value="${t.gf}"></div>
+        <div class="stat-field"><label>GA</label><input type="number" class="stat-input" data-team="${name}" data-field="ga" value="${t.ga}"></div>
+        <div class="stat-field"><label>Wins</label><input type="number" class="stat-input" data-team="${name}" data-field="wins" value="${t.wins}"></div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("adjList").innerHTML = data.participants.map(p=>`
+    <div class="adj-row">
+      <span>${p.name}</span>
+      <input type="number" data-adj="${p.name}" value="${data.adjustments[p.name]||0}">
+    </div>`).join("");
+
+  editOverlay.classList.add("show");
+}
+
+document.getElementById("saveEditBtn").addEventListener("click", async ()=>{
+  document.querySelectorAll('#statEditList input[type=number]').forEach(inp=>{
+    data.teams[inp.dataset.team][inp.dataset.field] = Number(inp.value) || 0;
+  });
+  document.querySelectorAll('#adjList input[type=number]').forEach(inp=>{
+    data.adjustments[inp.dataset.adj] = Number(inp.value) || 0;
+  });
+  const ok = await trySave();
+  render();
+  editOverlay.classList.remove("show");
+  if(!ok) showSaveWarning();
+});
+
+loadData();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>The Pool — 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch-dark:#0D2818;
+    --pitch:#153524;
+    --turf:#1B4332;
+    --chalk:#F7F5EF;
+    --chalk-dim:#C9CFC7;
+    --gold:#D4A017;
+    --gold-bright:#F0C23A;
+    --scarlet:#B5342A;
+    --line: rgba(247,245,239,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top, #1a3d29 0%, var(--pitch-dark) 55%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 40px, rgba(255,255,255,0) 40px 80px);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 16px 80px;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:900px;margin:0 auto;}
+
+  @media (max-width:520px){
+    body{padding:20px 12px 64px;}
+    .row{padding:15px 12px;gap:10px;}
+    .who-name{font-size:19px;}
+    .pts{font-size:27px;}
+    .eyebrow{font-size:11px;}
+    .sub{font-size:14px;}
+    .who-teams{font-size:14px;}
+    .tiebreak{font-size:12px;}
+    .pts-label{font-size:10px;}
+    .strip-label{font-size:10px;}
+    .strip-num{font-size:20px;}
+    .section-title{font-size:14px;}
+    .note{font-size:13px;}
+    .slot{font-size:14px;padding:11px 12px;}
+    .slot-owner{font-size:11px;}
+    .bracket-col-label{font-size:11px;}
+    .swipe-hint{font-size:11px;}
+    .tab-btn{font-size:14px;}
+    .stat-edit-row, .adj-row{font-size:14px;}
+  }
+  @media (max-width:400px){
+    .lock-btn{width:38px;height:38px;font-size:15px;top:10px;right:10px;}
+    h1{font-size:30px;}
+  }
+
+  header{text-align:center;margin-bottom:8px;}
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.25em;
+    color:var(--gold);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    font-size:clamp(36px,7.5vw,58px);
+    margin:6px 0 2px;
+    line-height:0.95;
+  }
+  .sub{color:var(--chalk-dim);font-size:15px;margin-bottom:22px;}
+
+  .scoreboard-strip{
+    display:flex;justify-content:center;gap:0;
+    border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;
+    margin-bottom:20px;
+    font-family:'Space Mono',monospace;
+  }
+  .strip-cell{flex:1;text-align:center;padding:12px 6px;border-right:1px solid var(--line);}
+  .strip-cell:last-child{border-right:none;}
+  .strip-num{font-size:22px;color:var(--gold-bright);font-weight:700;}
+  .strip-label{font-size:10px;letter-spacing:0.12em;color:var(--chalk-dim);text-transform:uppercase;margin-top:2px;}
+
+  .lock-btn{
+    position:fixed;top:14px;right:14px;
+    background:var(--turf);border:1px solid var(--line);
+    color:var(--chalk-dim);
+    width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:18px;
+    transition:transform .15s ease, color .15s ease, border-color .15s ease;
+    z-index:10;
+  }
+  .lock-btn:hover{color:var(--gold-bright);border-color:var(--gold);transform:scale(1.06);}
+  .lock-btn.unlocked{color:var(--gold-bright);border-color:var(--gold);}
+
+  /* Tabs */
+  .tabs{display:flex;justify-content:center;gap:6px;margin-bottom:24px;}
+  .tab-btn{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.06em;
+    font-size:14px;background:transparent;border:1px solid var(--line);color:var(--chalk-dim);
+    padding:11px 18px;border-radius:20px;cursor:pointer;min-height:44px;
+  }
+  .tab-btn.active{background:var(--gold);border-color:var(--gold);color:var(--pitch-dark);font-weight:600;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .card{
+    background:var(--pitch);
+    border:1px solid var(--line);
+    border-radius:6px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+
+  .row{
+    display:flex;align-items:center;gap:16px;
+    padding:18px 18px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .row:last-child{border-bottom:none;}
+  .row.leader{background:linear-gradient(90deg, rgba(212,160,23,0.14), transparent);}
+  .rank{
+    font-family:'Oswald',sans-serif;font-weight:700;
+    font-size:26px;color:var(--chalk-dim);
+    width:34px;text-align:center;flex-shrink:0;
+  }
+  .row.leader .rank{color:var(--gold-bright);}
+  .who{flex:1;min-width:0;}
+  .who-name{font-family:'Oswald',sans-serif;font-size:22px;text-transform:uppercase;letter-spacing:0.01em;}
+  .who-teams{font-size:15px;color:var(--chalk-dim);margin-top:4px;line-height:1.5;}
+  .double-tag{color:var(--gold-bright);font-weight:600;}
+  .tiebreak{
+    font-family:'Space Mono',monospace;font-size:13px;color:var(--chalk-dim);
+    margin-top:6px;letter-spacing:0.02em;
+  }
+  .pts{
+    font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;
+    color:var(--gold-bright);flex-shrink:0;text-align:right;min-width:56px;
+  }
+  .pts-label{font-size:11px;color:var(--chalk-dim);letter-spacing:0.1em;text-transform:uppercase;text-align:right;}
+
+  .section-title{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:0.08em;
+    font-size:14px;color:var(--chalk-dim);margin:32px 0 12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .section-title::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  .note{
+    font-size:13px;color:var(--chalk-dim);line-height:1.6;
+    background:var(--pitch);border:1px dashed var(--line);border-radius:6px;
+    padding:12px 14px;margin-top:24px;
+  }
+  .note b{color:var(--gold);}
+
+  /* Bracket */
+  .bracket-scroll{overflow-x:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch;}
+  .swipe-hint{display:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--chalk-dim);text-align:center;margin-bottom:8px;letter-spacing:0.06em;}
+  @media (max-width:720px){ .swipe-hint{display:block;} }
+  .bracket{display:flex;gap:34px;min-width:1100px;padding:6px 2px;}
   .bracket-col{display:flex;flex-direction:column;justify-content:space-around;flex:1;min-width:150px;position:relative;}
   @media (max-width:520px){ .bracket-col{min-width:170px;} .bracket{min-width:1250px;} }
   .bracket-col-label{
