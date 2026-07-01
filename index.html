@@ -168,7 +168,7 @@
   .swipe-hint{display:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--chalk-dim);text-align:center;margin-bottom:8px;letter-spacing:0.06em;}
   @media (max-width:720px){ .swipe-hint{display:block;} }
   .bracket{display:flex;gap:34px;min-width:1100px;padding:6px 2px;}
-  .bracket-col{display:flex;flex-direction:column;justify-content:space-around;flex:1;min-width:150px;}
+  .bracket-col{display:flex;flex-direction:column;justify-content:space-around;flex:1;min-width:150px;position:relative;}
   @media (max-width:520px){ .bracket-col{min-width:170px;} .bracket{min-width:1250px;} }
   .bracket-col-label{
     font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--gold);
@@ -316,11 +316,24 @@
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCr32yTAJ5-62ZwpCaH6bGqfpiXock8BCE",
+  authDomain: "the-pool-c42b3.firebaseapp.com",
+  projectId: "the-pool-c42b3",
+  storageBucket: "the-pool-c42b3.firebasestorage.app",
+  messagingSenderId: "355788321550",
+  appId: "1:355788321550:web:2ff11e5628d7dbc7e91d5f"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const poolDocRef = doc(db, "poolTracker", "state");
 const ROUND_POINTS = { R32:1, R16:1, QF:1, SF:2, F:4 };
 const ROUND_LABELS = { R32:"Round of 32", R16:"Round of 16", QF:"Quarterfinal", SF:"Semifinal", F:"Final" };
 const ROUND_ORDER = ["R32","R16","QF","SF","F"];
-const STORAGE_KEY = "wcpool-2026-v2";
 const TOTAL_PRIZE = 160;
 
 const DEFAULT_TEAMS = {
@@ -425,7 +438,6 @@ function defaultData(){
     participants: JSON.parse(JSON.stringify(DEFAULT_PARTICIPANTS)),
     bracket: freshBracket(),
     adjustments: {},
-    passHash: null,
     updatedAt: null
   };
 }
@@ -433,18 +445,30 @@ function defaultData(){
 let data = null;
 let unlocked = false;
 let currentMatchId = null;
+let loadFailedWarning = false;
 
 async function loadData(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    data = JSON.parse(res.value);
-    if(!data.bracket){ data.bracket = freshBracket(); } // migrate older saves
-    reconcileBracket();
+    const snap = await getDoc(poolDocRef);
+    if(snap.exists()){
+      data = snap.data();
+      if(!data.bracket){ data.bracket = freshBracket(); } // migrate older saves
+      reconcileBracket();
+    } else {
+      // Firestore explicitly tells us the document doesn't exist yet — safe to seed it.
+      data = defaultData();
+      reconcileBracket();
+      try{ await persist(); }catch(e2){ console.error("Could not save seed data:", e2); }
+    }
   }catch(e){
-    console.warn("No existing pool data found, seeding defaults:", e);
+    // A failed read is NOT the same thing as "no data exists yet" — it can also mean
+    // a transient connection hiccup. Show a working fallback view for this session,
+    // but do NOT write it back: that would permanently overwrite real saved data if
+    // the failure was only temporary.
+    console.warn("Could not read pool data this time (showing a temporary local view):", e);
     data = defaultData();
     reconcileBracket();
-    try{ await persist(); }catch(e2){ console.error("Could not save seed data:", e2); }
+    loadFailedWarning = true;
   }
   try{
     render();
@@ -453,11 +477,24 @@ async function loadData(){
     document.getElementById("footnote").innerHTML =
       "Something went wrong loading the pool data. Try refreshing — if it keeps happening, let me know.";
   }
+
+  // Live sync: when anyone (including this tab) saves a change, every open tab
+  // re-renders automatically — no refresh needed to see updated scores.
+  onSnapshot(poolDocRef, (snap)=>{
+    if(!snap.exists()) return;
+    data = snap.data();
+    if(!data.bracket){ data.bracket = freshBracket(); }
+    reconcileBracket();
+    loadFailedWarning = false;
+    render();
+  }, (err)=>{
+    console.warn("Live sync listener error:", err);
+  });
 }
 
 async function persist(){
   data.updatedAt = new Date().toISOString();
-  await window.storage.set(STORAGE_KEY, JSON.stringify(data), true);
+  await setDoc(poolDocRef, data);
 }
 
 async function trySave(){
@@ -576,6 +613,7 @@ function render(){
   renderBracket();
 
   document.getElementById("footnote").innerHTML = `
+    ${loadFailedWarning ? '<b>Heads up:</b> couldn\'t load the saved data just now (connection hiccup) — this is a temporary fallback view, nothing saved has been overwritten. Refresh in a moment to get the real data back.<br><br>' : ''}
     <b>How it's scored:</b> R32/R16/QF win = 1 pt, SF win = 2 pts, Final win = 4 pts — doubled for each player's designated long-shot team (★2x). Ties broken by combined goal difference, then goals scored, then wins in normal time; a full tie splits the pot.<br><br>
     <b>Data note:</b> match winners are set in the Bracket tab as results are officially confirmed — including any penalty shootouts, which aren't auto-detected. Goal tallies for tiebreakers are entered by the admin in Goals &amp; Adjustments.<br><br>
     Last updated: ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : "just now"}
@@ -615,7 +653,57 @@ function renderBracket(){
       box.addEventListener("click", ()=> openMatchModal(box.dataset.match));
     });
   }
+
+  layoutBracket();
 }
+
+// Positions every match after the first round at the vertical midpoint of the two
+// matches that feed into it, rather than just spacing each column evenly.
+// Only works while the Bracket tab is actually visible (hidden elements measure as 0).
+function layoutBracket(){
+  const bracketView = document.getElementById("bracketView");
+  if(!bracketView.classList.contains("active")) return;
+
+  const cols = document.querySelectorAll(".bracket-col");
+  if(!cols.length) return;
+
+  const positions = {};
+  BRACKET_COLUMNS[0].ids.forEach(id=>{
+    const elm = cols[0].querySelector(`[data-match="${id}"]`);
+    if(!elm) return;
+    elm.style.position = "";
+    elm.style.top = "";
+    positions[id] = { top: elm.offsetTop, height: elm.offsetHeight };
+  });
+
+  for(let c=1; c<BRACKET_COLUMNS.length; c++){
+    const colEl = cols[c];
+    BRACKET_COLUMNS[c].ids.forEach(id=>{
+      const m = data.bracket[id];
+      const pa = positions[m.slotA.feeder];
+      const pb = positions[m.slotB.feeder];
+      if(!pa || !pb) return;
+      const centerA = pa.top + pa.height/2;
+      const centerB = pb.top + pb.height/2;
+      const center = (centerA + centerB) / 2;
+      const elm = colEl.querySelector(`[data-match="${id}"]`);
+      if(!elm) return;
+      const h = elm.offsetHeight;
+      const top = center - h/2;
+      elm.style.position = "absolute";
+      elm.style.top = top + "px";
+      elm.style.left = "0";
+      elm.style.right = "0";
+      elm.style.margin = "0";
+      positions[id] = { top, height: h };
+    });
+  }
+}
+
+window.addEventListener("resize", ()=>{
+  clearTimeout(window._bracketResizeT);
+  window._bracketResizeT = setTimeout(layoutBracket, 150);
+});
 
 // ---------- Tabs ----------
 document.querySelectorAll(".tab-btn").forEach(btn=>{
@@ -624,6 +712,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.view).classList.add("active");
+    if(btn.dataset.view === "bracketView") layoutBracket();
   });
 });
 
