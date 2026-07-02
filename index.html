@@ -56,7 +56,6 @@
     .stat-edit-row, .adj-row{font-size:14px;}
   }
   @media (max-width:400px){
-    .lock-btn{width:38px;height:38px;font-size:15px;top:10px;right:10px;}
     h1{font-size:30px;}
   }
 
@@ -117,6 +116,9 @@
     z-index:10;
   }
   .lock-btn:hover{color:var(--gold-bright);border-color:var(--gold);transform:scale(1.06);}
+  @media (max-width:460px){
+    .lock-btn{width:34px;height:34px;font-size:13px;top:10px;right:10px;}
+  }
   .lock-btn.unlocked{color:var(--gold-bright);border-color:var(--gold);}
 
   /* Tabs */
@@ -192,21 +194,34 @@
   .bracket-col{display:flex;flex-direction:column;justify-content:flex-start;flex:1;min-width:150px;position:relative;}
   .bracket-spacer{flex-shrink:0;width:0;}
   @media (max-width:520px){ .bracket-col{min-width:170px;} .bracket{min-width:1250px;} }
-  .round-pills{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .round-pills{
+    display:flex;justify-content:center;gap:8px;margin-bottom:12px;
+    overflow-x:auto;flex-wrap:nowrap;
+    scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;
+  }
+  @media (max-width:520px){ .round-pills{justify-content:flex-start;} }
+  .round-pills::-webkit-scrollbar{display:none;}
   .round-pill{
     font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.08em;color:var(--chalk-dim);
     text-transform:uppercase;background:transparent;border:1px solid var(--line);border-radius:20px;
     padding:6px 13px;cursor:pointer;user-select:none;transition:all .15s ease;
+    flex-shrink:0;
   }
   .round-pill:hover{border-color:var(--gold);color:var(--gold-bright);}
   .round-pill.focused{background:var(--gold);border-color:var(--gold);color:var(--pitch-dark);font-weight:600;}
 
   /* Schedule */
-  .participant-pills{display:flex;gap:6px;flex-wrap:wrap;padding-top:6px;}
+  .participant-pills{
+    display:flex;gap:6px;padding-top:6px;
+    overflow-x:auto;flex-wrap:nowrap;
+    scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;
+  }
+  .participant-pills::-webkit-scrollbar{display:none;}
   .participant-pill{
     font-family:'Space Mono',monospace;font-size:11px;color:var(--chalk-dim);
     background:transparent;border:1px solid var(--line);border-radius:16px;
     padding:6px 13px;cursor:pointer;user-select:none;transition:all .15s ease;
+    flex-shrink:0;
   }
   .participant-pill:hover{border-color:var(--gold);color:var(--gold-bright);}
   .participant-pill.active{background:var(--gold);border-color:var(--gold);color:var(--pitch-dark);font-weight:600;}
@@ -902,6 +917,9 @@ function renderSchedule(){
       const name = pill.dataset.name;
       if(scheduleFilter.has(name)) scheduleFilter.delete(name);
       else scheduleFilter.add(name);
+      // Filtering can shrink the page enough that the browser clamps scrollY on its
+      // own, which the header-scroll listener would otherwise mistake for a scroll-up.
+      suppressHeaderToggle();
       renderSchedule();
     });
   });
@@ -909,6 +927,7 @@ function renderSchedule(){
   if(resetPill){
     resetPill.addEventListener("click", ()=>{
       scheduleFilter.clear();
+      suppressHeaderToggle();
       renderSchedule();
     });
   }
@@ -1023,33 +1042,68 @@ function updateStickyOffset(){
 // Collapses the title/scoreboard block on scroll-down and brings it back on scroll-up
 // (or once you're back near the top) — the tabs and active pill row stay pinned either
 // way since they live outside .header-collapsible, just lower in the sticky block.
+// Programmatic scrollIntoView/scrollTo jumps (and clamping when a requested position
+// exceeds the scrollable range) don't land in one clean step — the browser fires several
+// scroll events while settling, including intermediate overshoot/correction samples that
+// can be tens of pixels opposite the overall direction. No fixed per-event threshold is
+// reliably wide enough to absorb that. So instead of reacting to every scroll event, this
+// only evaluates direction once scrolling has paused briefly — comparing the settled
+// position against the *previous* settled position, never an intermediate one.
 let _lastScrollY = window.scrollY;
-let _scrollTicking = false;
+let _scrollSettleTimer = null;
+let _suppressHeaderToggle = false;
+// Pill filtering can shrink the page enough that the browser clamps scrollY on its
+// own, without the user actually scrolling. Left unguarded, the listener below reads
+// that as a manual scroll-up and pops the header open. Call this right before any
+// such incidental scroll change to preserve whatever collapse state was already showing.
+function suppressHeaderToggle(duration = 500){
+  _suppressHeaderToggle = true;
+  clearTimeout(window._suppressHeaderT);
+  window._suppressHeaderT = setTimeout(()=>{
+    _suppressHeaderToggle = false;
+    _lastScrollY = window.scrollY;
+    // Safety net: if we settled back at the very top, always show the header —
+    // there's no further "scroll up" possible from there to bring it back otherwise.
+    if(window.scrollY <= 30){
+      const headerCollapsible = document.getElementById("headerCollapsible");
+      const stickyTop = document.getElementById("stickyTop");
+      if(headerCollapsible){
+        headerCollapsible.classList.remove("collapsed");
+        if(stickyTop) stickyTop.classList.remove("header-hidden");
+      }
+    }
+  }, duration);
+}
 function handleHeaderScroll(){
   const headerCollapsible = document.getElementById("headerCollapsible");
   const stickyTop = document.getElementById("stickyTop");
   const currentY = window.scrollY;
-  if(headerCollapsible){
-    let collapsed = headerCollapsible.classList.contains("collapsed");
+  if(headerCollapsible && !_suppressHeaderToggle){
+    const wasCollapsed = headerCollapsible.classList.contains("collapsed");
+    let collapsed = wasCollapsed;
     if(currentY <= 30){
       collapsed = false;
-    } else if(currentY > _lastScrollY + 4){
+    } else if(currentY > _lastScrollY){
       collapsed = true;
-    } else if(currentY < _lastScrollY - 4){
+    } else if(currentY < _lastScrollY){
       collapsed = false;
     }
-    headerCollapsible.classList.toggle("collapsed", collapsed);
-    if(stickyTop) stickyTop.classList.toggle("header-hidden", collapsed);
+    if(collapsed !== wasCollapsed){
+      headerCollapsible.classList.toggle("collapsed", collapsed);
+      if(stickyTop) stickyTop.classList.toggle("header-hidden", collapsed);
+      // Collapsing/expanding changes the page's height, which — if we're scrolled
+      // near what was the bottom — can force the browser to clamp scrollY back into
+      // range on its own. Ignore that self-inflicted correction instead of reading
+      // it as a fresh user scroll, or it immediately undoes the change it just made.
+      suppressHeaderToggle(350);
+    }
   }
   _lastScrollY = currentY;
   updateStickyOffset();
-  _scrollTicking = false;
 }
 window.addEventListener("scroll", ()=>{
-  if(!_scrollTicking){
-    requestAnimationFrame(handleHeaderScroll);
-    _scrollTicking = true;
-  }
+  clearTimeout(_scrollSettleTimer);
+  _scrollSettleTimer = setTimeout(handleHeaderScroll, 120);
 }, { passive: true });
 
 // Re-check live status periodically so the highlight appears/disappears on its own
@@ -1071,8 +1125,16 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.getElementById("roundPills").style.display = (btn.dataset.view === "bracketView") ? "flex" : "none";
     updateStickyOffset();
     if(btn.dataset.view === "bracketView") layoutBracket();
-    if(btn.dataset.view === "scheduleView") scrollScheduleToToday();
-    else window.scrollTo({ top: 0, behavior: "instant" });
+    if(btn.dataset.view === "scheduleView"){
+      scrollScheduleToToday();
+    } else {
+      // Standings/Bracket jump straight to scrollY 0. Deliberately NOT suppressed —
+      // scrollY 0 is the literal top of the page, and there's no further "scroll up"
+      // possible from there to bring the header back if it stayed hidden, so it must
+      // always show at this exact position (handled naturally by handleHeaderScroll's
+      // own currentY<=30 rule once the resulting scroll event fires).
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
   });
 });
 
