@@ -30,6 +30,7 @@
     min-height:100vh;
     padding:32px 16px 80px;
     overflow-x:hidden;
+    overflow-anchor:none;
   }
   .wrap{max-width:900px;margin:0 auto;}
 
@@ -65,8 +66,15 @@
       radial-gradient(ellipse at top, #1a3d29 0%, var(--pitch-dark) 55%),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 40px, rgba(255,255,255,0) 40px 80px);
     background-attachment:fixed;
-    padding-bottom:6px;margin-bottom:14px;
+    padding-top:0;padding-bottom:6px;margin-bottom:14px;
+    transition:padding-top .25s ease;
   }
+  .sticky-top.header-hidden{padding-top:14px;}
+  .header-collapsible{
+    max-height:var(--header-max-height, 240px);opacity:1;overflow:hidden;
+    transition:max-height .25s ease, opacity .2s ease;
+  }
+  .header-collapsible.collapsed{max-height:0;opacity:0;}
   header{text-align:center;margin-bottom:8px;}
   .eyebrow{
     font-family:'Space Mono',monospace;
@@ -173,7 +181,11 @@
   .note b{color:var(--gold);}
 
   /* Bracket */
-  .bracket-scroll{overflow-x:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch;}
+  .bracket-scroll{
+    overflow-x:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .bracket-scroll::-webkit-scrollbar{display:none;}
   .swipe-hint{display:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--chalk-dim);text-align:center;margin-bottom:8px;letter-spacing:0.06em;}
   @media (max-width:720px){ .swipe-hint{display:block;} }
   .bracket{display:flex;gap:34px;min-width:1100px;padding:6px 2px;}
@@ -317,13 +329,15 @@
 
 <div class="wrap">
   <div class="sticky-top" id="stickyTop">
-    <header>
-      <div class="eyebrow">Friends &amp; Family Invitational</div>
-      <h1>The Pool</h1>
-      <div class="sub">FIFA World Cup 2026 · Winner takes $160</div>
-    </header>
+    <div class="header-collapsible" id="headerCollapsible">
+      <header>
+        <div class="eyebrow">Friends &amp; Family Invitational</div>
+        <h1>The Pool</h1>
+        <div class="sub">FIFA World Cup 2026 · Winner takes $160</div>
+      </header>
 
-    <div class="scoreboard-strip" id="scoreboardStrip"></div>
+      <div class="scoreboard-strip" id="scoreboardStrip"></div>
+    </div>
 
     <div class="tabs">
       <button class="tab-btn active" data-view="standingsView">Standings</button>
@@ -996,9 +1010,47 @@ window.addEventListener("resize", ()=>{
 // offset rather than a guessed constant — otherwise the sticky bar covers the target.
 function updateStickyOffset(){
   const stickyTop = document.getElementById("stickyTop");
+  const headerCollapsible = document.getElementById("headerCollapsible");
+  // scrollHeight reflects the full, un-clipped content height regardless of whether
+  // the header is currently collapsed (max-height:0), so this is safe to call anytime.
+  if(headerCollapsible){
+    document.documentElement.style.setProperty("--header-max-height", headerCollapsible.scrollHeight + "px");
+  }
   if(!stickyTop) return;
   document.documentElement.style.setProperty("--sticky-offset", (stickyTop.offsetHeight + 12) + "px");
 }
+
+// Collapses the title/scoreboard block on scroll-down and brings it back on scroll-up
+// (or once you're back near the top) — the tabs and active pill row stay pinned either
+// way since they live outside .header-collapsible, just lower in the sticky block.
+let _lastScrollY = window.scrollY;
+let _scrollTicking = false;
+function handleHeaderScroll(){
+  const headerCollapsible = document.getElementById("headerCollapsible");
+  const stickyTop = document.getElementById("stickyTop");
+  const currentY = window.scrollY;
+  if(headerCollapsible){
+    let collapsed = headerCollapsible.classList.contains("collapsed");
+    if(currentY <= 30){
+      collapsed = false;
+    } else if(currentY > _lastScrollY + 4){
+      collapsed = true;
+    } else if(currentY < _lastScrollY - 4){
+      collapsed = false;
+    }
+    headerCollapsible.classList.toggle("collapsed", collapsed);
+    if(stickyTop) stickyTop.classList.toggle("header-hidden", collapsed);
+  }
+  _lastScrollY = currentY;
+  updateStickyOffset();
+  _scrollTicking = false;
+}
+window.addEventListener("scroll", ()=>{
+  if(!_scrollTicking){
+    requestAnimationFrame(handleHeaderScroll);
+    _scrollTicking = true;
+  }
+}, { passive: true });
 
 // Re-check live status periodically so the highlight appears/disappears on its own
 // without requiring a page reload or a data change.
@@ -1020,6 +1072,7 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     updateStickyOffset();
     if(btn.dataset.view === "bracketView") layoutBracket();
     if(btn.dataset.view === "scheduleView") scrollScheduleToToday();
+    else window.scrollTo({ top: 0, behavior: "instant" });
   });
 });
 
