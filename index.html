@@ -24,6 +24,7 @@
     background:
       radial-gradient(ellipse at top, #1a3d29 0%, var(--pitch-dark) 55%),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 40px, rgba(255,255,255,0) 40px 80px);
+    background-attachment:fixed;
     color:var(--chalk);
     font-family:'Inter',sans-serif;
     min-height:100vh;
@@ -58,6 +59,14 @@
     h1{font-size:30px;}
   }
 
+  .sticky-top{
+    position:sticky;top:0;z-index:6;
+    background:
+      radial-gradient(ellipse at top, #1a3d29 0%, var(--pitch-dark) 55%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 40px, rgba(255,255,255,0) 40px 80px);
+    background-attachment:fixed;
+    padding-bottom:6px;margin-bottom:14px;
+  }
   header{text-align:center;margin-bottom:8px;}
   .eyebrow{
     font-family:'Space Mono',monospace;
@@ -169,17 +178,64 @@
   @media (max-width:720px){ .swipe-hint{display:block;} }
   .bracket{display:flex;gap:34px;min-width:1100px;padding:6px 2px;}
   .bracket-col{display:flex;flex-direction:column;justify-content:flex-start;flex:1;min-width:150px;position:relative;}
+  .bracket-spacer{flex-shrink:0;width:0;}
   @media (max-width:520px){ .bracket-col{min-width:170px;} .bracket{min-width:1250px;} }
-  .bracket-col-label{
-    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--gold);
-    text-transform:uppercase;text-align:center;margin-bottom:10px;
+  .round-pills{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .round-pill{
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.08em;color:var(--chalk-dim);
+    text-transform:uppercase;background:transparent;border:1px solid var(--line);border-radius:20px;
+    padding:6px 13px;cursor:pointer;user-select:none;transition:all .15s ease;
   }
+  .round-pill:hover{border-color:var(--gold);color:var(--gold-bright);}
+  .round-pill.focused{background:var(--gold);border-color:var(--gold);color:var(--pitch-dark);font-weight:600;}
+
+  /* Schedule */
+  .participant-pills{display:flex;gap:6px;flex-wrap:wrap;padding-top:6px;}
+  .participant-pill{
+    font-family:'Space Mono',monospace;font-size:11px;color:var(--chalk-dim);
+    background:transparent;border:1px solid var(--line);border-radius:16px;
+    padding:6px 13px;cursor:pointer;user-select:none;transition:all .15s ease;
+  }
+  .participant-pill:hover{border-color:var(--gold);color:var(--gold-bright);}
+  .participant-pill.active{background:var(--gold);border-color:var(--gold);color:var(--pitch-dark);font-weight:600;}
+  .participant-pill.reset-pill{border-color:var(--scarlet);color:var(--scarlet);}
+  .participant-pill.reset-pill:hover{background:var(--scarlet);color:var(--chalk);}
+  .schedule-date{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--chalk-dim);
+    text-transform:uppercase;margin:22px 0 8px;
+    scroll-margin-top:var(--sticky-offset, 220px);
+  }
+  .schedule-date:first-child{margin-top:0;}
+  .schedule-row{
+    display:flex;align-items:center;gap:14px;
+    background:var(--pitch);border:1px solid var(--line);border-radius:6px;
+    padding:12px 14px;margin-bottom:8px;transition:opacity .15s ease;
+  }
+  .schedule-row.live{border-color:var(--scarlet);}
+  .schedule-row.dimmed{opacity:0.35;}
+  .schedule-teams{flex:1;min-width:0;}
+  .schedule-team-row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;padding:2px 0;}
+  .schedule-team-row.winner{color:var(--gold-bright);font-weight:600;}
+  .schedule-team-row.loser{opacity:0.4;text-decoration:line-through;}
+  .schedule-team-row.tbd{color:var(--chalk-dim);font-style:italic;}
+  .schedule-team-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .schedule-owner{font-size:11px;color:var(--chalk-dim);flex-shrink:0;}
+  .schedule-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+  .schedule-round{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;color:var(--gold);text-transform:uppercase;}
+  .schedule-time{font-family:'Space Mono',monospace;font-size:11px;color:var(--chalk-dim);white-space:nowrap;}
+  .schedule-time.live{color:var(--scarlet);font-weight:700;}
   .match{
     background:var(--pitch);border:1px solid var(--line);border-radius:5px;
     margin:8px 0;cursor:default;overflow:hidden;
   }
   .match.clickable{cursor:pointer;}
   .match.clickable:hover{border-color:var(--gold);}
+  .match.live{border-color:var(--scarlet);box-shadow:0 0 0 1px var(--scarlet);animation:live-pulse 2s ease-in-out infinite;}
+  .live-badge{color:var(--scarlet);font-weight:700;letter-spacing:0.08em;}
+  @keyframes live-pulse{
+    0%,100%{box-shadow:0 0 0 1px rgba(181,52,42,0.5);}
+    50%{box-shadow:0 0 0 3px rgba(181,52,42,0.85);}
+  }
   .slot{
     display:flex;justify-content:space-between;align-items:center;gap:6px;
     padding:12px 14px;font-size:15px;border-bottom:1px solid var(--line);
@@ -260,17 +316,23 @@
 <div class="lock-btn" id="lockBtn" title="Admin">🔒</div>
 
 <div class="wrap">
-  <header>
-    <div class="eyebrow">Friends &amp; Family Invitational</div>
-    <h1>The Pool</h1>
-    <div class="sub">FIFA World Cup 2026 · Winner takes $160</div>
-  </header>
+  <div class="sticky-top" id="stickyTop">
+    <header>
+      <div class="eyebrow">Friends &amp; Family Invitational</div>
+      <h1>The Pool</h1>
+      <div class="sub">FIFA World Cup 2026 · Winner takes $160</div>
+    </header>
 
-  <div class="scoreboard-strip" id="scoreboardStrip"></div>
+    <div class="scoreboard-strip" id="scoreboardStrip"></div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-view="standingsView">Standings</button>
-    <button class="tab-btn" data-view="bracketView">Bracket</button>
+    <div class="tabs">
+      <button class="tab-btn active" data-view="standingsView">Standings</button>
+      <button class="tab-btn" data-view="bracketView">Bracket</button>
+      <button class="tab-btn" data-view="scheduleView">Schedule</button>
+    </div>
+
+    <div class="round-pills" id="roundPills" style="display:none;"></div>
+    <div class="participant-pills" id="schedulePills" style="display:none;"></div>
   </div>
 
   <div id="standingsView" class="view active">
@@ -284,6 +346,11 @@
     <div class="bracket-scroll">
       <div class="bracket" id="bracketEl"></div>
     </div>
+  </div>
+
+  <div id="scheduleView" class="view">
+    <div class="section-title">Schedule</div>
+    <div id="scheduleList"></div>
   </div>
 
   <div class="note" id="footnote"></div>
@@ -431,10 +498,10 @@ function freshBracket(){
     q3: { round:"QF", slotA:{feeder:"rE"}, slotB:{feeder:"rF"}, winner:null, espn:"760511", when:"Fri, Jul 10 · 3:00 PM ET" },
     q4: { round:"QF", slotA:{feeder:"rG"}, slotB:{feeder:"rH"}, winner:null, espn:"760513", when:"Sat, Jul 11 · 9:00 PM ET" },
 
-    // FIFA's real pairing crosses: Match101 = winner(Match97=q1) v winner(Match98=q3);
-    // Match102 = winner(Match99=q2) v winner(Match100=q4). NOT adjacent q1+q2/q3+q4 — that was a bug.
-    s1: { round:"SF", slotA:{feeder:"q1"}, slotB:{feeder:"q3"}, winner:null, espn:"760514", when:"Tue, Jul 14 · 3:00 PM ET" },
-    s2: { round:"SF", slotA:{feeder:"q2"}, slotB:{feeder:"q4"}, winner:null, espn:"760515", when:"Wed, Jul 15 · 3:00 PM ET" },
+    // FIFA's real pairing is adjacent: Match101 = winner(Match97=q1) v winner(Match98=q2);
+    // Match102 = winner(Match99=q3) v winner(Match100=q4).
+    s1: { round:"SF", slotA:{feeder:"q1"}, slotB:{feeder:"q2"}, winner:null, espn:"760514", when:"Tue, Jul 14 · 3:00 PM ET" },
+    s2: { round:"SF", slotA:{feeder:"q3"}, slotB:{feeder:"q4"}, winner:null, espn:"760515", when:"Wed, Jul 15 · 3:00 PM ET" },
 
     f:  { round:"F", slotA:{feeder:"s1"}, slotB:{feeder:"s2"}, winner:null, espn:"760517", when:"Sun, Jul 19 · 3:00 PM ET" }
   };
@@ -448,12 +515,12 @@ function backfillEspnIds(bracket){
     if(!bracket[id].when){ bracket[id].when = fresh[id].when; }
   });
   // Correct a bracket-logic bug from an earlier version: the Semifinal pairing was
-  // wired as adjacent QFs (q1+q2 / q3+q4) instead of FIFA's actual crossed pairing
-  // (q1+q3 / q2+q4). Safe to overwrite outright since no SF winner should exist yet
-  // at this stage of the tournament.
-  if(bracket.s1 && bracket.s1.slotB && bracket.s1.slotB.feeder === "q2"){
-    bracket.s1.slotB.feeder = "q3";
-    bracket.s2.slotA.feeder = "q2";
+  // briefly (incorrectly) wired as a crossed pairing (q1+q3 / q2+q4) instead of
+  // FIFA's actual adjacent pairing (q1+q2 / q3+q4). Safe to overwrite outright since
+  // no SF winner should exist yet at this stage of the tournament.
+  if(bracket.s1 && bracket.s1.slotB && bracket.s1.slotB.feeder === "q3"){
+    bracket.s1.slotB.feeder = "q2";
+    bracket.s2.slotA.feeder = "q3";
   }
 }
 
@@ -479,6 +546,8 @@ let data = null;
 let unlocked = false;
 let currentMatchId = null;
 let loadFailedWarning = false;
+let focusedRound = null;
+let scheduleFilter = new Set();
 
 async function loadData(){
   try{
@@ -540,6 +609,37 @@ function showSaveWarning(){
   f.innerHTML = "<b>Heads up:</b> your last change couldn't be saved to shared storage (connection hiccup). " +
     "It's showing correctly for you right now, but reloading — or someone else opening this link — may not see it yet. Try again in a moment." +
     "<br><br>" + f.innerHTML;
+}
+
+// ---- Live match detection ----
+// "when" strings look like "Sat, Jul 4 · 1:00 PM ET" — no year, no explicit offset.
+// The tournament runs entirely in June/July, so US Eastern is always EDT (UTC-4).
+const MONTH_MAP = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+const LIVE_WINDOW_MIN = 195; // 90 min + stoppage/half + potential extra time & penalties
+function parseWhen(whenStr){
+  if(!whenStr) return null;
+  const m = whenStr.match(/(\w{3})\s+(\d{1,2})\s*·\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if(!m) return null;
+  const [, mon, day, hh, mm, ampm] = m;
+  const monthIdx = MONTH_MAP[mon];
+  if(monthIdx === undefined) return null;
+  let hour24 = Number(hh) % 12;
+  if(ampm.toUpperCase() === "PM") hour24 += 12;
+  return new Date(Date.UTC(2026, monthIdx, Number(day), hour24 + 4, Number(mm)));
+}
+function isMatchLive(m){
+  if(!m || m.winner) return false;
+  const kickoff = parseWhen(m.when);
+  if(!kickoff) return false;
+  const diffMin = (Date.now() - kickoff.getTime()) / 60000;
+  return diffMin >= 0 && diffMin <= LIVE_WINDOW_MIN;
+}
+// parseWhen bakes in a +4h UTC offset to represent ET wall-clock time, so undoing
+// that same offset recovers the ET calendar date for any instant — including "now".
+function etDateKey(dateOrMs){
+  const ms = (dateOrMs instanceof Date ? dateOrMs.getTime() : dateOrMs) - 4*3600*1000;
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
 }
 
 // ---- Bracket resolution helpers ----
@@ -644,6 +744,7 @@ function render(){
   }).join("");
 
   renderBracket();
+  renderSchedule();
 
   document.getElementById("footnote").innerHTML = `
     ${loadFailedWarning ? '<b>Heads up:</b> couldn\'t load the saved data just now (connection hiccup) — this is a temporary fallback view, nothing saved has been overwritten. Refresh in a moment to get the real data back.<br><br>' : ''}
@@ -670,23 +771,23 @@ function renderBracket(){
         return `<div class="slot ${cls}"><span class="slot-team">${teamName}</span><span class="slot-owner">${ownerLabel}</span></div>`;
       };
       const clickable = unlocked && teamA && teamB;
+      const live = teamA && teamB && isMatchLive(m);
       const espnLink = (teamA && teamB && m.espn)
         ? `<div class="match-meta">
-             <span class="match-when">${m.when||""}</span>
+             <span class="match-when">${live ? '<span class="live-badge">● LIVE</span>' : (m.when||"")}</span>
              <a class="espn-link" href="https://www.espn.com/soccer/match/_/gameId/${m.espn}" target="_blank" rel="noopener" onclick="event.stopPropagation()">ESPN ↗</a>
            </div>`
         : "";
-      return `<div class="match ${clickable?'clickable':''}" data-match="${id}">
+      return `<div class="match ${clickable?'clickable':''} ${live?'live':''}" data-match="${id}">
         ${rowHtml(teamA)}
         ${rowHtml(teamB)}
         ${espnLink}
       </div>`;
     }).join("");
     return `<div class="bracket-col">
-      <div class="bracket-col-label">${ROUND_LABELS[col.round]}</div>
       ${matches}
     </div>`;
-  }).join("");
+  }).join("") + `<div class="bracket-spacer" id="bracketSpacer"></div>`;
 
   if(unlocked){
     el.querySelectorAll(".match.clickable").forEach(box=>{
@@ -694,11 +795,130 @@ function renderBracket(){
     });
   }
 
+  const pillsEl = document.getElementById("roundPills");
+  pillsEl.innerHTML = BRACKET_COLUMNS.map(col=>{
+    const focused = focusedRound === col.round;
+    return `<div class="round-pill ${focused?'focused':''}" data-round="${col.round}">${ROUND_LABELS[col.round]}</div>`;
+  }).join("");
+  pillsEl.querySelectorAll(".round-pill").forEach(pill=>{
+    pill.addEventListener("click", ()=>{
+      const round = pill.dataset.round;
+      if(focusedRound === round) return;
+      focusedRound = round;
+      pillsEl.querySelectorAll(".round-pill").forEach(p=>{
+        p.classList.toggle("focused", p.dataset.round === focusedRound);
+      });
+      layoutBracket();
+      const colIndex = BRACKET_COLUMNS.findIndex(c=>c.round===round);
+      const colEl = document.querySelectorAll(".bracket-col")[colIndex];
+      const scroller = document.querySelector(".bracket-scroll");
+      if(colEl && scroller){
+        const targetLeft = scroller.scrollLeft + (colEl.getBoundingClientRect().left - scroller.getBoundingClientRect().left);
+        scroller.scrollTo({ left: targetLeft, behavior: "smooth" });
+      }
+    });
+  });
+
   layoutBracket();
+  updateStickyOffset();
+}
+
+function renderSchedule(){
+  const entries = Object.keys(data.bracket).map(id=>{
+    const m = data.bracket[id];
+    return { id, m, teamA: slotTeam(id,"A"), teamB: slotTeam(id,"B"), kickoff: parseWhen(m.when) };
+  });
+  // Time drives the order — matches on the same day still need to land in kickoff sequence,
+  // not just grouped by date, so this sorts on the full timestamp before anything else.
+  entries.sort((a,b)=>{
+    const ta = a.kickoff ? a.kickoff.getTime() : Infinity;
+    const tb = b.kickoff ? b.kickoff.getTime() : Infinity;
+    return ta - tb;
+  });
+
+  const activeFilter = scheduleFilter.size > 0;
+  const visible = entries.filter(({teamA, teamB})=>{
+    if(!activeFilter) return true;
+    const ownerA = teamA ? ownerOf(teamA) : null;
+    const ownerB = teamB ? ownerOf(teamB) : null;
+    return (ownerA && scheduleFilter.has(ownerA.name)) || (ownerB && scheduleFilter.has(ownerB.name));
+  });
+
+  let lastDate = null;
+  const rowsHtml = visible.length ? visible.map(({id, m, teamA, teamB, kickoff})=>{
+    const dateLabel = m.when ? m.when.split("·")[0].trim() : "Date TBD";
+    const dateKey = kickoff ? etDateKey(kickoff) : "";
+    const dateHeader = dateLabel !== lastDate ? `<div class="schedule-date" data-date="${dateKey}">${dateLabel}</div>` : "";
+    lastDate = dateLabel;
+
+    const teamRow = (teamName)=>{
+      if(!teamName){
+        return `<div class="schedule-team-row tbd"><span class="schedule-team-name">TBD</span></div>`;
+      }
+      const own = ownerOf(teamName);
+      const cls = m.winner ? (m.winner===teamName ? "winner":"loser") : "";
+      const ownerLabel = own ? (own.isDouble ? own.name+" ★2x" : own.name) : "";
+      return `<div class="schedule-team-row ${cls}"><span class="schedule-team-name">${teamName}</span><span class="schedule-owner">${ownerLabel}</span></div>`;
+    };
+
+    const live = teamA && teamB && isMatchLive(m);
+    const timeLabel = m.when ? m.when.split("·")[1] : "";
+
+    return `${dateHeader}<div class="schedule-row ${live?'live':''}">
+      <div class="schedule-teams">
+        ${teamRow(teamA)}
+        ${teamRow(teamB)}
+      </div>
+      <div class="schedule-meta">
+        <div class="schedule-round">${ROUND_LABELS[m.round]}</div>
+        <div class="schedule-time ${live?'live':''}">${live ? '● LIVE' : (timeLabel||"")}</div>
+      </div>
+    </div>`;
+  }).join("") : `<div class="note">No matches for the selected players.</div>`;
+
+  document.getElementById("scheduleList").innerHTML = rowsHtml;
+
+  const pillsEl = document.getElementById("schedulePills");
+  pillsEl.innerHTML = data.participants.map(p=>{
+    const active = scheduleFilter.has(p.name);
+    return `<div class="participant-pill ${active?'active':''}" data-name="${p.name}">${p.name}</div>`;
+  }).join("") + (activeFilter ? `<div class="participant-pill reset-pill" id="scheduleResetPill">Reset</div>` : "");
+  pillsEl.querySelectorAll(".participant-pill[data-name]").forEach(pill=>{
+    pill.addEventListener("click", ()=>{
+      const name = pill.dataset.name;
+      if(scheduleFilter.has(name)) scheduleFilter.delete(name);
+      else scheduleFilter.add(name);
+      renderSchedule();
+    });
+  });
+  const resetPill = document.getElementById("scheduleResetPill");
+  if(resetPill){
+    resetPill.addEventListener("click", ()=>{
+      scheduleFilter.clear();
+      renderSchedule();
+    });
+  }
+  updateStickyOffset();
+}
+
+// Jumps the page to today's date group in the schedule — falls back to the nearest
+// upcoming date if nothing's scheduled today, or the last date if the tournament's over.
+function scrollScheduleToToday(){
+  const headers = [...document.querySelectorAll(".schedule-date[data-date]")];
+  if(!headers.length) return;
+  const todayKey = etDateKey(Date.now());
+  let target = headers.find(h => h.dataset.date === todayKey);
+  if(!target) target = headers.find(h => h.dataset.date > todayKey);
+  if(!target) target = headers[headers.length - 1];
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // Positions every match after the first round at the vertical midpoint of the two
 // matches that feed into it, rather than just spacing each column evenly.
+// Exception: the exact focused round (if any) drops the midpoint math and stacks
+// tightly from the top instead, using the same natural spacing as Round of 32 —
+// mirrors ESPN, where only the round you clicked compresses; every other round
+// (before or after it) still cascades off its feeders' real positions as usual.
 // Only works while the Bracket tab is actually visible (hidden elements measure as 0).
 function layoutBracket(){
   const bracketView = document.getElementById("bracketView");
@@ -707,54 +927,86 @@ function layoutBracket(){
   const cols = document.querySelectorAll(".bracket-col");
   if(!cols.length) return;
 
+  // Give the scroller enough trailing room that any column — including the last —
+  // can actually reach the left edge when scrolled to, instead of the browser
+  // clamping scrollLeft short because there's nothing left to scroll past.
+  const scroller = document.querySelector(".bracket-scroll");
+  const spacer = document.getElementById("bracketSpacer");
+  if(scroller && spacer) spacer.style.width = scroller.clientWidth + "px";
+
+  const focusedIndex = focusedRound ? BRACKET_COLUMNS.findIndex(c=>c.round===focusedRound) : -1;
+
   const positions = {};
   BRACKET_COLUMNS[0].ids.forEach(id=>{
     const elm = cols[0].querySelector(`[data-match="${id}"]`);
     if(!elm) return;
     elm.style.position = "";
     elm.style.top = "";
+    elm.style.left = "";
+    elm.style.right = "";
+    elm.style.margin = "";
     positions[id] = { top: elm.offsetTop, height: elm.offsetHeight };
   });
 
   for(let c=1; c<BRACKET_COLUMNS.length; c++){
     const colEl = cols[c];
-    let minTop = Infinity;
+    const compact = c === focusedIndex;
+
     BRACKET_COLUMNS[c].ids.forEach(id=>{
-      const m = data.bracket[id];
-      const pa = positions[m.slotA.feeder];
-      const pb = positions[m.slotB.feeder];
-      if(!pa || !pb) return;
-      const centerA = pa.top + pa.height/2;
-      const centerB = pb.top + pb.height/2;
-      const center = (centerA + centerB) / 2;
       const elm = colEl.querySelector(`[data-match="${id}"]`);
       if(!elm) return;
-      const h = elm.offsetHeight;
-      const top = center - h/2;
-      elm.style.position = "absolute";
-      elm.style.top = top + "px";
-      elm.style.left = "0";
-      elm.style.right = "0";
-      elm.style.margin = "0";
-      positions[id] = { top, height: h };
-      if(top < minTop) minTop = top;
-    });
 
-    const label = colEl.querySelector(".bracket-col-label");
-    if(label && isFinite(minTop)){
-      label.style.position = "absolute";
-      label.style.top = (minTop - label.offsetHeight - 10) + "px";
-      label.style.left = "0";
-      label.style.right = "0";
-      label.style.margin = "0";
-    }
+      if(compact){
+        elm.style.position = "";
+        elm.style.top = "";
+        elm.style.left = "";
+        elm.style.right = "";
+        elm.style.margin = "";
+        positions[id] = { top: elm.offsetTop, height: elm.offsetHeight };
+      } else {
+        const m = data.bracket[id];
+        const pa = positions[m.slotA.feeder];
+        const pb = positions[m.slotB.feeder];
+        if(!pa || !pb) return;
+        const centerA = pa.top + pa.height/2;
+        const centerB = pb.top + pb.height/2;
+        const center = (centerA + centerB) / 2;
+        const h = elm.offsetHeight;
+        const top = center - h/2;
+        elm.style.position = "absolute";
+        elm.style.top = top + "px";
+        elm.style.left = "0";
+        elm.style.right = "0";
+        elm.style.margin = "0";
+        positions[id] = { top, height: h };
+      }
+    });
   }
 }
 
 window.addEventListener("resize", ()=>{
   clearTimeout(window._bracketResizeT);
   window._bracketResizeT = setTimeout(layoutBracket, 150);
+  clearTimeout(window._stickyResizeT);
+  window._stickyResizeT = setTimeout(updateStickyOffset, 150);
 });
+
+// The sticky header block's height varies (text wrapping, participant pills showing
+// only on the Schedule tab), so the scroll-to-today target needs a matching, live-updated
+// offset rather than a guessed constant — otherwise the sticky bar covers the target.
+function updateStickyOffset(){
+  const stickyTop = document.getElementById("stickyTop");
+  if(!stickyTop) return;
+  document.documentElement.style.setProperty("--sticky-offset", (stickyTop.offsetHeight + 12) + "px");
+}
+
+// Re-check live status periodically so the highlight appears/disappears on its own
+// without requiring a page reload or a data change.
+setInterval(()=>{
+  if(!data) return;
+  if(document.getElementById("bracketView").classList.contains("active")) renderBracket();
+  if(document.getElementById("scheduleView").classList.contains("active")) renderSchedule();
+}, 60000);
 
 // ---------- Tabs ----------
 document.querySelectorAll(".tab-btn").forEach(btn=>{
@@ -763,7 +1015,11 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.view).classList.add("active");
+    document.getElementById("schedulePills").style.display = (btn.dataset.view === "scheduleView") ? "flex" : "none";
+    document.getElementById("roundPills").style.display = (btn.dataset.view === "bracketView") ? "flex" : "none";
+    updateStickyOffset();
     if(btn.dataset.view === "bracketView") layoutBracket();
+    if(btn.dataset.view === "scheduleView") scrollScheduleToToday();
   });
 });
 
