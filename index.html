@@ -497,40 +497,42 @@ const DEFAULT_PARTICIPANTS = [
 function freshBracket(){
   return {
     m1:  { round:"R32", slotA:{team:"South Africa"}, slotB:{team:"Canada"},     winner:"Canada", espn:"760486", when:"Sun, Jun 28 · 3:00 PM ET" },
-    m2:  { round:"R32", slotA:{team:"Netherlands"},  slotB:{team:"Morocco"},    winner:null, espn:"760488", when:"Mon, Jun 29 · 9:00 PM ET" },
-    m3:  { round:"R32", slotA:{team:"Germany"},      slotB:{team:"Paraguay"},   winner:null, espn:"760489", when:"Mon, Jun 29 · 4:30 PM ET" },
+    m2:  { round:"R32", slotA:{team:"Netherlands"},  slotB:{team:"Morocco"},    winner:"Morocco", espn:"760488", when:"Mon, Jun 29 · 9:00 PM ET" },
+    m3:  { round:"R32", slotA:{team:"Germany"},      slotB:{team:"Paraguay"},   winner:"Paraguay", espn:"760489", when:"Mon, Jun 29 · 4:30 PM ET" },
     m4:  { round:"R32", slotA:{team:"France"},       slotB:{team:"Sweden"},     winner:"France", espn:"760492", when:"Tue, Jun 30 · 5:00 PM ET" },
     m5:  { round:"R32", slotA:{team:"Brazil"},       slotB:{team:"Japan"},      winner:"Brazil", espn:"760487", when:"Mon, Jun 29 · 1:00 PM ET" },
     m6:  { round:"R32", slotA:{team:"Ivory Coast"},  slotB:{team:"Norway"},     winner:"Norway", espn:"760490", when:"Tue, Jun 30 · 1:00 PM ET" },
-    m7:  { round:"R32", slotA:{team:"Mexico"},       slotB:{team:"Ecuador"},    winner:null, espn:"760491", when:"Tue, Jun 30 · 9:00 PM ET" },
-    m8:  { round:"R32", slotA:{team:"England"},      slotB:{team:"DR Congo"},  winner:null, espn:"760495", when:"Wed, Jul 1 · 12:00 PM ET" },
-    m9:  { round:"R32", slotA:{team:"Spain"},        slotB:{team:"Austria"},    winner:null, espn:"760497", when:"Thu, Jul 2 · 3:00 PM ET" },
-    m10: { round:"R32", slotA:{team:"Portugal"},     slotB:{team:"Croatia"},    winner:null, espn:"760496", when:"Thu, Jul 2 · 7:00 PM ET" },
-    m11: { round:"R32", slotA:{team:"Belgium"},      slotB:{team:"Senegal"},    winner:null, espn:"760493", when:"Wed, Jul 1 · 4:00 PM ET" },
-    m12: { round:"R32", slotA:{team:"USA"},          slotB:{team:"Bosnia & H"}, winner:null, espn:"760494", when:"Wed, Jul 1 · 8:00 PM ET" },
-    m13: { round:"R32", slotA:{team:"Australia"},    slotB:{team:"Egypt"},      winner:null, espn:"760499", when:"Fri, Jul 3 · 2:00 PM ET" },
-    m14: { round:"R32", slotA:{team:"Argentina"},    slotB:{team:"Cape Verde"}, winner:null, espn:"760500", when:"Fri, Jul 3 · 6:00 PM ET" },
-    m15: { round:"R32", slotA:{team:"Switzerland"},  slotB:{team:"Algeria"},    winner:null, espn:"760498", when:"Thu, Jul 2 · 11:00 PM ET" },
-    m16: { round:"R32", slotA:{team:"Colombia"},     slotB:{team:"Ghana"},      winner:null, espn:"760501", when:"Fri, Jul 3 · 9:30 PM ET" },
+    m7:  { round:"R32", slotA:{team:"Mexico"},       slotB:{team:"Ecuador"},    winner:"Mexico", espn:"760491", when:"Tue, Jun 30 · 9:00 PM ET" },
+    m8:  { round:"R32", slotA:{team:"England"},      slotB:{team:"DR Congo"},  winner:"England", espn:"760495", when:"Wed, Jul 1 · 12:00 PM ET" },
+    m9:  { round:"R32", slotA:{team:"Spain"},        slotB:{team:"Austria"},    winner:"Spain", espn:"760497", when:"Thu, Jul 2 · 3:00 PM ET" },
+    m10: { round:"R32", slotA:{team:"Portugal"},     slotB:{team:"Croatia"},    winner:"Portugal", espn:"760496", when:"Thu, Jul 2 · 7:00 PM ET" },
+    m11: { round:"R32", slotA:{team:"Belgium"},      slotB:{team:"Senegal"},    winner:"Belgium", espn:"760493", when:"Wed, Jul 1 · 4:00 PM ET" },
+    m12: { round:"R32", slotA:{team:"USA"},          slotB:{team:"Bosnia & H"}, winner:"USA", espn:"760494", when:"Wed, Jul 1 · 8:00 PM ET" },
+    m13: { round:"R32", slotA:{team:"Australia"},    slotB:{team:"Egypt"},      winner:"Egypt", espn:"760499", when:"Fri, Jul 3 · 2:00 PM ET" },
+    m14: { round:"R32", slotA:{team:"Argentina"},    slotB:{team:"Cape Verde"}, winner:"Argentina", espn:"760500", when:"Fri, Jul 3 · 6:00 PM ET" },
+    m15: { round:"R32", slotA:{team:"Switzerland"},  slotB:{team:"Algeria"},    winner:"Switzerland", espn:"760498", when:"Thu, Jul 2 · 11:00 PM ET" },
+    m16: { round:"R32", slotA:{team:"Colombia"},     slotB:{team:"Ghana"},      winner:"Colombia", espn:"760501", when:"Fri, Jul 3 · 9:30 PM ET" },
 
-    rA: { round:"R16", slotA:{feeder:"m1"},  slotB:{feeder:"m2"},  winner:null, espn:"760502", when:"Sat, Jul 4 · 1:00 PM ET" },
-    rB: { round:"R16", slotA:{feeder:"m3"},  slotB:{feeder:"m4"},  winner:null, espn:"760503", when:"Sat, Jul 4 · 5:00 PM ET" },
-    rC: { round:"R16", slotA:{feeder:"m5"},  slotB:{feeder:"m6"},  winner:null, espn:"760504", when:"Sun, Jul 5 · 4:00 PM ET" },
-    rD: { round:"R16", slotA:{feeder:"m7"},  slotB:{feeder:"m8"},  winner:null, espn:"760505", when:"Sun, Jul 5 · 8:00 PM ET" },
-    rE: { round:"R16", slotA:{feeder:"m9"},  slotB:{feeder:"m10"}, winner:null, espn:"760506", when:"Mon, Jul 6 · 3:00 PM ET" },
-    rF: { round:"R16", slotA:{feeder:"m11"}, slotB:{feeder:"m12"}, winner:null, espn:"760507", when:"Mon, Jul 6 · 8:00 PM ET" },
-    rG: { round:"R16", slotA:{feeder:"m13"}, slotB:{feeder:"m14"}, winner:null, espn:"760509", when:"Tue, Jul 7 · 12:00 PM ET" },
-    rH: { round:"R16", slotA:{feeder:"m15"}, slotB:{feeder:"m16"}, winner:null, espn:"760508", when:"Tue, Jul 7 · 4:00 PM ET" },
+    rA: { round:"R16", slotA:{feeder:"m1"},  slotB:{feeder:"m2"},  winner:"Morocco", espn:"760502", when:"Sat, Jul 4 · 1:00 PM ET" },
+    rB: { round:"R16", slotA:{feeder:"m3"},  slotB:{feeder:"m4"},  winner:"France", espn:"760503", when:"Sat, Jul 4 · 5:00 PM ET" },
+    rC: { round:"R16", slotA:{feeder:"m5"},  slotB:{feeder:"m6"},  winner:"Norway", espn:"760504", when:"Sun, Jul 5 · 4:00 PM ET" },
+    rD: { round:"R16", slotA:{feeder:"m7"},  slotB:{feeder:"m8"},  winner:"England", espn:"760505", when:"Sun, Jul 5 · 8:00 PM ET" },
+    rE: { round:"R16", slotA:{feeder:"m9"},  slotB:{feeder:"m10"}, winner:"Spain", espn:"760506", when:"Mon, Jul 6 · 3:00 PM ET" },
+    rF: { round:"R16", slotA:{feeder:"m11"}, slotB:{feeder:"m12"}, winner:"Belgium", espn:"760507", when:"Mon, Jul 6 · 8:00 PM ET" },
+    rG: { round:"R16", slotA:{feeder:"m13"}, slotB:{feeder:"m14"}, winner:"Argentina", espn:"760509", when:"Tue, Jul 7 · 12:00 PM ET" },
+    rH: { round:"R16", slotA:{feeder:"m15"}, slotB:{feeder:"m16"}, winner:"Switzerland", espn:"760508", when:"Tue, Jul 7 · 4:00 PM ET" },
 
-    q1: { round:"QF", slotA:{feeder:"rA"}, slotB:{feeder:"rB"}, winner:null, espn:"760510", when:"Thu, Jul 9 · 4:00 PM ET" },
-    q2: { round:"QF", slotA:{feeder:"rC"}, slotB:{feeder:"rD"}, winner:null, espn:"760512", when:"Sat, Jul 11 · 5:00 PM ET" },
-    q3: { round:"QF", slotA:{feeder:"rE"}, slotB:{feeder:"rF"}, winner:null, espn:"760511", when:"Fri, Jul 10 · 3:00 PM ET" },
-    q4: { round:"QF", slotA:{feeder:"rG"}, slotB:{feeder:"rH"}, winner:null, espn:"760513", when:"Sat, Jul 11 · 9:00 PM ET" },
+    q1: { round:"QF", slotA:{feeder:"rA"}, slotB:{feeder:"rB"}, winner:"France", espn:"760510", when:"Thu, Jul 9 · 4:00 PM ET" },
+    q2: { round:"QF", slotA:{feeder:"rC"}, slotB:{feeder:"rD"}, winner:"England", espn:"760512", when:"Sat, Jul 11 · 5:00 PM ET" },
+    q3: { round:"QF", slotA:{feeder:"rE"}, slotB:{feeder:"rF"}, winner:"Spain", espn:"760511", when:"Fri, Jul 10 · 3:00 PM ET" },
+    q4: { round:"QF", slotA:{feeder:"rG"}, slotB:{feeder:"rH"}, winner:"Argentina", espn:"760513", when:"Sat, Jul 11 · 9:00 PM ET" },
 
-    // FIFA's real pairing is adjacent: Match101 = winner(Match97=q1) v winner(Match98=q2);
-    // Match102 = winner(Match99=q3) v winner(Match100=q4).
-    s1: { round:"SF", slotA:{feeder:"q1"}, slotB:{feeder:"q2"}, winner:null, espn:"760514", when:"Tue, Jul 14 · 3:00 PM ET" },
-    s2: { round:"SF", slotA:{feeder:"q3"}, slotB:{feeder:"q4"}, winner:null, espn:"760515", when:"Wed, Jul 15 · 3:00 PM ET" },
+    // FIFA's real pairing crosses: Match101 (France v Morocco winner's line) actually
+    // pairs q1 (France) against q3 (Spain), and Match102 pairs q2 (England) against
+    // q4 (Argentina) — confirmed against real semifinal results (France v Spain,
+    // England v Argentina), not the adjacent q1+q2/q3+q4 pairing assumed earlier.
+    s1: { round:"SF", slotA:{feeder:"q1"}, slotB:{feeder:"q3"}, winner:null, espn:"760514", when:"Tue, Jul 14 · 3:00 PM ET" },
+    s2: { round:"SF", slotA:{feeder:"q2"}, slotB:{feeder:"q4"}, winner:null, espn:"760515", when:"Wed, Jul 15 · 3:00 PM ET" },
 
     f:  { round:"F", slotA:{feeder:"s1"}, slotB:{feeder:"s2"}, winner:null, espn:"760517", when:"Sun, Jul 19 · 3:00 PM ET" }
   };
@@ -543,14 +545,6 @@ function backfillEspnIds(bracket){
     if(!bracket[id].espn){ bracket[id].espn = fresh[id].espn; }
     if(!bracket[id].when){ bracket[id].when = fresh[id].when; }
   });
-  // Correct a bracket-logic bug from an earlier version: the Semifinal pairing was
-  // briefly (incorrectly) wired as a crossed pairing (q1+q3 / q2+q4) instead of
-  // FIFA's actual adjacent pairing (q1+q2 / q3+q4). Safe to overwrite outright since
-  // no SF winner should exist yet at this stage of the tournament.
-  if(bracket.s1 && bracket.s1.slotB && bracket.s1.slotB.feeder === "q3"){
-    bracket.s1.slotB.feeder = "q2";
-    bracket.s2.slotA.feeder = "q3";
-  }
 }
 
 const BRACKET_COLUMNS = [
@@ -830,26 +824,48 @@ function renderBracket(){
     return `<div class="round-pill ${focused?'focused':''}" data-round="${col.round}">${ROUND_LABELS[col.round]}</div>`;
   }).join("");
   pillsEl.querySelectorAll(".round-pill").forEach(pill=>{
-    pill.addEventListener("click", ()=>{
-      const round = pill.dataset.round;
-      if(focusedRound === round) return;
-      focusedRound = round;
-      pillsEl.querySelectorAll(".round-pill").forEach(p=>{
-        p.classList.toggle("focused", p.dataset.round === focusedRound);
-      });
-      layoutBracket();
-      const colIndex = BRACKET_COLUMNS.findIndex(c=>c.round===round);
-      const colEl = document.querySelectorAll(".bracket-col")[colIndex];
-      const scroller = document.querySelector(".bracket-scroll");
-      if(colEl && scroller){
-        const targetLeft = scroller.scrollLeft + (colEl.getBoundingClientRect().left - scroller.getBoundingClientRect().left);
-        scroller.scrollTo({ left: targetLeft, behavior: "smooth" });
-      }
-    });
+    pill.addEventListener("click", ()=> focusRound(pill.dataset.round));
   });
 
   layoutBracket();
   updateStickyOffset();
+}
+
+// Focuses a round pill (same effect as clicking it): highlights the pill, compacts
+// that round's spacing, and scrolls it to the left edge of the bracket.
+function focusRound(round){
+  if(focusedRound === round) return;
+  focusedRound = round;
+  document.querySelectorAll(".round-pill").forEach(p=>{
+    p.classList.toggle("focused", p.dataset.round === focusedRound);
+  });
+  layoutBracket();
+  const colIndex = BRACKET_COLUMNS.findIndex(c=>c.round===round);
+  const colEl = document.querySelectorAll(".bracket-col")[colIndex];
+  const scroller = document.querySelector(".bracket-scroll");
+  if(colEl && scroller){
+    const targetLeft = scroller.scrollLeft + (colEl.getBoundingClientRect().left - scroller.getBoundingClientRect().left);
+    scroller.scrollTo({ left: targetLeft, behavior: "smooth" });
+  }
+}
+
+// Finds whichever round is "current" right now — the round with a match scheduled
+// today, or otherwise whichever round's matches are chronologically closest to today
+// (covers days between rounds, and the tail end after the tournament has concluded).
+function getCurrentRound(){
+  const todayKey = etDateKey(Date.now());
+  const todayMs = Date.parse(todayKey);
+  let bestRound = BRACKET_COLUMNS[0].round;
+  let bestDiff = Infinity;
+  BRACKET_COLUMNS.forEach(col=>{
+    col.ids.forEach(id=>{
+      const kickoff = parseWhen(data.bracket[id].when);
+      if(!kickoff) return;
+      const diff = Math.abs(Date.parse(etDateKey(kickoff)) - todayMs);
+      if(diff < bestDiff){ bestDiff = diff; bestRound = col.round; }
+    });
+  });
+  return bestRound;
 }
 
 function renderSchedule(){
@@ -1124,7 +1140,10 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
     document.getElementById("schedulePills").style.display = (btn.dataset.view === "scheduleView") ? "flex" : "none";
     document.getElementById("roundPills").style.display = (btn.dataset.view === "bracketView") ? "flex" : "none";
     updateStickyOffset();
-    if(btn.dataset.view === "bracketView") layoutBracket();
+    if(btn.dataset.view === "bracketView"){
+      layoutBracket();
+      focusRound(getCurrentRound());
+    }
     if(btn.dataset.view === "scheduleView"){
       scrollScheduleToToday();
     } else {
